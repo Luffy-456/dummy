@@ -9,7 +9,7 @@ async function handleUnclaim({ github, context }) {
       owner,
       repo,
       issue_number: issueNumber,
-      body: `❌ Commands cannot be used on closed issues.`,
+      body: `🔒 **Oops!** This issue is closed. Commands can only be used on open issues.`,
     });
     return;
   }
@@ -21,7 +21,7 @@ async function handleUnclaim({ github, context }) {
       owner,
       repo,
       issue_number: issueNumber,
-      body: `ℹ️ @${commenter}, you are not currently assigned to this issue, so there's nothing to unclaim.`,
+      body: `🤔 **Wait a second!** @${commenter}, you aren't currently assigned to this issue, so there is nothing to unclaim! 🤷‍♂️`,
     });
     return;
   }
@@ -37,7 +37,7 @@ async function handleUnclaim({ github, context }) {
     owner,
     repo,
     issue_number: issueNumber,
-    body: `✅ Successfully unclaimed this issue for @${commenter}.\n\n> 🔓 The issue is now open for others to claim.`,
+    body: `✅ **Unclaimed!** You have successfully been unassigned from this issue, @${commenter}. Thanks for freeing it up! 🙌\n\n> 🔓 **Status:** This issue is now open and available for others to claim. 🚀`,
   });
 }
 
