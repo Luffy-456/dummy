@@ -24,7 +24,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { handleClaim } = require('./.github/scripts/claim-handler.js');
+            const { handleClaim } = require('./.github/scripts/autoClaimHandle.js');
             await handleClaim({ github, context });
 
       - name: Handle /unclaim
@@ -33,5 +33,5 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { handleUnclaim } = require('./.github/scripts/unclaim-handler.js');
+            const { handleUnclaim } = require('./.github/scripts/autoUnclaimHandler.js');
             await handleUnclaim({ github, context });
