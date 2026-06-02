@@ -5,7 +5,7 @@ async function findExistingAssignments(github, owner, repo, username, currentIss
   return issues.filter((issue) => !issue.pull_request && issue.number !== currentIssueNumber);
 }
 
-const MAX_ASSIGNED_ISSUES = 5;
+const MAX_ASSIGNED_ISSUES = 1;
 
 async function handleClaim({ github, context }) {
   const { owner, repo } = context.repo;
@@ -68,7 +68,7 @@ async function handleClaim({ github, context }) {
 
   await github.rest.issues.createComment({
     owner, repo, issue_number: issueNumber,
-    body: `🎉 **Assigned!** Welcome, @${commenter}.\n\n⏳ **Reminder:** You have **3 days** to submit a Pull Request. \n\n> 💡 Please read [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md).\n\nHappy coding! 🚀`,
+    body: `🎉 **Assigned!** Welcome, @${commenter}.\n\n⏳ **Reminder:** You have **5 days** to submit a Pull Request. \n\n> 💡 Please read [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md).\n\nHappy coding! 🚀`,
   });
 }
 
