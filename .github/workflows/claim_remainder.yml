@@ -1,0 +1,68 @@
+name: Assign Request Reminder
+
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: assign-reminder-${{ github.event.issue.number }}-${{ github.event.comment.id }}
+  cancel-in-progress: false
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  remind-claim:
+    name: Remind About /claim Command
+    runs-on: ubuntu-latest
+    if: >-
+      !github.event.issue.pull_request &&
+      github.event.comment.user.type != 'Bot' &&
+      !contains(github.event.comment.body, '/claim') &&
+      !contains(github.event.comment.body, '/assign') &&
+      (
+        contains(github.event.comment.body, 'assign this issue to me') ||
+        contains(github.event.comment.body, 'can i work on this') ||
+        contains(github.event.comment.body, 'assign me')
+      )
+    steps:
+      - name: Post /claim Reminder
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const commenter = context.payload.comment.user.login;
+            const issueAuthor = context.payload.issue.user.login;
+            const { owner, repo } = context.repo;
+            const issueNumber = context.payload.issue.number;
+
+            if (context.payload.issue.state === 'closed') return;
+            
+            const assignees = context.payload.issue.assignees.map(a => a.login.toLowerCase());
+            if (assignees.includes(commenter.toLowerCase())) return;
+
+            const isOpenForAnyone = issueAuthor.toLowerCase() === 'saptarshi-coder';
+            const isAuthor = commenter.toLowerCase() === issueAuthor.toLowerCase();
+
+            let claimEligibilityNote = '';
+            if (!isOpenForAnyone && !isAuthor) {
+              claimEligibilityNote = `\n> ⚠️ **Note:** Only the issue author (@${issueAuthor}) can \`/claim\` this issue.`;
+            }
+
+            const bodyLines = [
+              `👋 Hey @${commenter}! Looks like you want to work on this issue! 🎉`,
+              ``,
+              `We use an automated system for assignments.`,
+              ``,
+              `## 🤖 How to Claim an Issue`,
+              `Comment \`/claim\` on this issue and our bot will automatically assign it to you.`,
+              claimEligibilityNote,
+              ``,
+              `## 📋 A Few Things to Know`,
+              `- You can hold a **maximum of 5 open issues** at a time.`,
+              `- Make sure to read our **[CONTRIBUTING.md](https://github.com/${owner}/${repo}/blob/main/CONTRIBUTING.md)**.`
+            ];
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: issueNumber, body: bodyLines.join('\n'),
+            });
