@@ -24,7 +24,7 @@ async function handleClaim({ github, context }) {
   const issueAuthor = context.payload.issue.user.login;
   
   // UPDATED: Replaced original maintainers with the owner of EaseMotion-css
-  const MAINTAINERS = ['saptarshi-coder','Luffy-456']; 
+  const MAINTAINERS = ['saptarshi-coder','luffy-456']; 
   const isOpenedByMaintainer = MAINTAINERS.includes(issueAuthor.toLowerCase());
 
   if (!isOpenedByMaintainer && commenter.toLowerCase() !== issueAuthor.toLowerCase()) {
