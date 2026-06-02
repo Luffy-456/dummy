@@ -1,0 +1,128 @@
+name: Issue Claim
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+
+jobs:
+  claim:
+    if: github.event.comment.body == '/claim'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Handle claim command
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const comment = context.payload.comment;
+            const commenter = comment.user.login;
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issueNumber = issue.number;
+
+            const MAX_ASSIGNED_ISSUES = 1;
+
+            # const MAINTAINERS = ['Luffy-456']
+            #   .map(user => user.toLowerCase());
+            
+            const MAINTAINERS = ['Luffy-456'];
+            const isOpenedByMaintainer =
+              MAINTAINERS.includes(issueAuthor);
+
+            const issueAuthor = issue.user.login;
+
+            const isOpenedByMaintainer =
+              MAINTAINERS.includes(issueAuthor.toLowerCase());
+
+            async function comment(body) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body
+              });
+            }
+
+            // Closed issue
+            if (issue.state === 'closed') {
+              await comment('❌ Commands cannot be used on closed issues.');
+              return;
+            }
+
+            // Non-maintainer issue → only author can claim
+            if (
+              !isOpenedByMaintainer &&
+              commenter.toLowerCase() !== issueAuthor.toLowerCase()
+            ) {
+              await comment(
+                `❌ Only the author of this issue (@${issueAuthor}) can claim it.`
+              );
+              return;
+            }
+
+            // Already assigned
+            const assignees = issue.assignees.map(a =>
+              a.login.toLowerCase()
+            );
+
+            if (assignees.length > 0) {
+              if (assignees.includes(commenter.toLowerCase())) {
+                await comment('ℹ️ You are already assigned to this issue.');
+                return;
+              }
+
+              await comment(
+                `❌ This issue is already assigned to ${issue.assignees
+                  .map(a => '@' + a.login)
+                  .join(', ')}`
+              );
+              return;
+            }
+
+            // Count contributor's active assignments
+            const { data: assignedIssues } =
+              await github.rest.issues.listForRepo({
+                owner,
+                repo,
+                assignee: commenter,
+                state: 'open',
+                per_page: 100
+              });
+
+            const activeIssues = assignedIssues.filter(
+              i =>
+                !i.pull_request &&
+                i.number !== issueNumber
+            );
+
+            if (activeIssues.length >= MAX_ASSIGNED_ISSUES) {
+              const issueList = activeIssues
+                .map(
+                  i =>
+                    `• #${i.number} - ${i.title}`
+                )
+                .join('\n');
+
+              await comment(
+                `❌ You already have **${activeIssues.length}/${MAX_ASSIGNED_ISSUES}** active assigned issue(s).\n\n${issueList}`
+              );
+
+              return;
+            }
+
+            // Assign
+            await github.rest.issues.addAssignees({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              assignees: [commenter]
+            });
+
+            await comment(
+              `🎉 Assigned to @${commenter}. Happy coding! 🚀`
+            );
