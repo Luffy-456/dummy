@@ -66,9 +66,10 @@ async function handleClaim({ github, context }) {
     owner, repo, issue_number: issueNumber, assignees: [commenter],
   });
 
+  const contributingUrl =`https://github.com/${owner}/${repo}/blob/main/CONTRIBUTING.md`;
   await github.rest.issues.createComment({
     owner, repo, issue_number: issueNumber,
-    body: `🎉 **Assigned!** Welcome aboard, @${commenter}! 🌟\n\n⏳ **Timeframe:** You have **5 days** to submit a Pull Request before it becomes open for others to claim.\n\n> 💡 **Tip:** Be sure to check out our [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md) to get off to a great start.\n\nHappy coding! 🚀✨`,
+    body: `🎉 **Assigned!** Welcome aboard, @${commenter}! 🌟\n\n⏳ **Timeframe:** You have **5 days** to submit a Pull Request before it becomes open for others to claim.\n\n> 💡 **Tip:** Be sure to check out our [CONTRIBUTING.md](${contributingUrl}) to get off to a great start.\n\nHappy coding! 🚀✨`,
   });
 }
 
