@@ -1,18 +1,15 @@
 module.exports = async ({ github, context }) => {
-  // 1. Guard clauses: Ignore PRs, Bots, and closed issues
+  //Guard clauses: Ignore PRs, Bots, and closed issues
   if (context.payload.issue.pull_request) return;
   if (context.payload.comment.user.type === 'Bot') return;
   if (context.payload.issue.state === 'closed') return;
 
-  // Convert the comment to lowercase for case-insensitive matching
   const commentBody = context.payload.comment.body.toLowerCase();
 
-  // 2. If they already used the correct commands, exit early
   if (commentBody.includes('/claim') || commentBody.includes('/assign')) {
     return;
   }
 
-  // 3. Define the trigger phrases
   const triggerPhrases = [
     'assign this issue to me',
     'assign this to me',
@@ -40,23 +37,23 @@ module.exports = async ({ github, context }) => {
     "i'm interested in this"
   ];
 
-  // 4. Check if the comment contains any of the trigger phrases
+  // Check if the comment contains any of the trigger phrases
   const needsReminder = triggerPhrases.some(phrase => commentBody.includes(phrase));
   if (!needsReminder) {
-    return; // Exit if no matching phrase is found
+    return;
   }
 
-  // 5. Gather context variables
+  // Gather context variables
   const commenter = context.payload.comment.user.login;
   const issueAuthor = context.payload.issue.user.login;
   const { owner, repo } = context.repo;
   const issueNumber = context.payload.issue.number;
 
-  // 6. Check if the commenter is already assigned
+  // Check if the commenter is already assigned
   const assignees = context.payload.issue.assignees.map(a => a.login.toLowerCase());
   if (assignees.includes(commenter.toLowerCase())) return;
 
-  // 7. Determine eligibility and format the message
+  //Determine eligibility and format the message
   const isOpenForAnyone = issueAuthor.toLowerCase() === 'saptarshi-coder';
   const isAuthor = commenter.toLowerCase() === issueAuthor.toLowerCase();
 
@@ -66,20 +63,20 @@ module.exports = async ({ github, context }) => {
   }
 
   const bodyLines = [
-    `👋 Hey @${commenter}! Looks like you want to work on this issue! 🎉`,
+    `Hey @commenter! 👋 Thanks for your interest in contributing!`,
     ``,
-    `We use an automated system for assignments.`,
+    `To keep our workflow organized, we use an automated assignment system. If you'd like to take this on, please use our bot command:`,
     ``,
-    `## 🤖 How to Claim an Issue`,
-    `Comment \`/claim\` on this issue and our bot will automatically assign it to you.`,
+    `## How to Claim an Issue`,
+    `💬 Reply to this issue with exactly: \`/claim\``,
     claimEligibilityNote,
     ``,
-    `## 📋 A Few Things to Know`,
-    `- You can hold a **maximum of 5 open issues** at a time.`,
+    `## 📋 Things to Remember`,
+    `- You can hold a **maximum of 1 open issues** at a time.`,
     `- Make sure to read our **[CONTRIBUTING.md](https://github.com/${owner}/${repo}/blob/main/CONTRIBUTING.md)**.`
   ];
 
-  // 8. Post the comment
+  // Post comment
   await github.rest.issues.createComment({
     owner,
     repo,
